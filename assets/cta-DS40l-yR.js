@@ -1213,6 +1213,9 @@ const X = 600 * 1e3,
                   className: "cta-pricing-cta-button",
                   onClick: (ev) => {
                     ev.preventDefault();
+                    if (typeof window.fbq === "function") {
+                      window.fbq("track", "InitiateCheckout");
+                    }
                     const checkoutUrl = ae(o);
                     let redirected = !1;
                     const goToCheckout = () => {
