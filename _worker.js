@@ -48,9 +48,29 @@ export default {
         signal: AbortSignal.timeout(15000)
       }
     );
-    const data=await upstream.json();
-    if(!upstream.ok)return json({error:'HikerAPI retornou HTTP '+upstream.status},upstream.status);
-    const user=data?.user||data?.response?.user||data?.response||data;
+    const data = await upstream.json();
+
+if (!upstream.ok) {
+  return json({
+    error: 'RocketAPI retornou HTTP ' + upstream.status
+  }, upstream.status);
+}
+
+if (data?.status === 'error') {
+  return json({
+    error: 'A RocketAPI não conseguiu concluir a consulta'
+  }, 502);
+}
+
+const body = data?.response?.body;
+
+const user =
+  body?.user ||
+  body?.data?.user ||
+  data?.user ||
+  data?.response?.user ||
+  data?.response ||
+  data;
     if(!user || !user.username)return json({error:'Resposta da API sem perfil reconhecível'},502);
     // A API pode fornecer a foto em qualquer um destes campos.
     // Preserve a URL assinada completa, incluindo a query string.
