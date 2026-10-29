@@ -29,13 +29,25 @@ export default {
   if (url.pathname === '/api/proxy/hikerapi.php' || url.pathname === '/api/proxy/instagram.php') {
    const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
    if(request.method!=='GET')return json({error:'Método não permitido'},405);
-   if(!env.HIKER_API_TOKEN)return json({error:'Token HIKER_API_TOKEN não configurado'},503);
+   if(!env.ROCKET_API_TOKEN)return json({error:'Token ROCKET_API_TOKEN não configurado'},503);
    const username=(url.searchParams.get('username')||'').replace(/^@/,'');
    if(!/^[A-Za-z0-9._]{1,30}$/.test(username))return json({error:'Nome de usuário inválido'},400);
    if(url.pathname.endsWith('instagram.php') && url.searchParams.get('tipo')!=='perfil')return json({error:'Esta versão de teste suporta apenas consulta de perfil público; demais recursos ainda exigem adaptação.'},501);
    if(url.pathname.endsWith('hikerapi.php') && url.searchParams.get('path')!=='/v2/user/by/username')return json({error:'Endpoint ainda não implementado nesta versão de teste'},501);
    try {
-    const upstream=await fetch('https://api.hikerapi.com/v2/user/by/username?username='+encodeURIComponent(username),{headers:{'x-access-key':env.HIKER_API_TOKEN,'accept':'application/json'},signal:AbortSignal.timeout(15000)});
+    const upstream = await fetch(
+      'https://v1.rocketapi.io/instagram/user/get_info_by_username',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Token ' + env.ROCKET_API_TOKEN,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username }),
+        signal: AbortSignal.timeout(15000)
+      }
+    );
     const data=await upstream.json();
     if(!upstream.ok)return json({error:'HikerAPI retornou HTTP '+upstream.status},upstream.status);
     const user=data?.user||data?.response?.user||data?.response||data;
